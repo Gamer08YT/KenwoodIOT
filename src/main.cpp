@@ -2,11 +2,28 @@
 
 // Webserver and WebSerial
 #include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <WebSerial.h>
 #include <ArduinoHA.h>
 #include <WiFiClient.h>
+#include <HomeAssistant.h>
+#include <MQTT.h>
+#include "Kenwood.h"
+#include "Device.h"
+
+/*
+    General commands:
+    10 00: switch on (from standby)
+    10 80: switch off (to standby)
+
+    AMP commands (KRF-A4020):
+    18 48: activate MD input
+    08 48: activate CD input
+    04 49: activate Tape input
+    F8 48: activate Phono input
+
+    AMP Response:
+    80 x5: Input selected (0=phono, C=aux, 8=tuner, 4=cd,
+       B=md, A=Tape1)
+ */
 
 // Define Network Credentials
 const char *ssid = "HRouter-1";
@@ -24,6 +41,9 @@ HAMqtt mqtt(client, device);
 // Store Volume Slider.
 HANumber volume("Volume");
 
+// Store Bus Version Select.
+HASelect version("type");
+
 // Store Input Select.
 HASelect input("Input");
 
@@ -36,9 +56,6 @@ HASwitch standby("Standby");
 // Store Power Switch.
 HASwitch power("Power");
 
-// Store Bus Version.
-HASelect version("Version");
-
 /**
  * Bread Board:
  * -----------------
@@ -47,9 +64,6 @@ HASelect version("Version");
  * |       |       |
  * -----------------
  */
-
-// Define new Server Object.
-AsyncWebServer server(80);
 
 /*
 Kenwood XS/XS8/SL16 system remote control
@@ -82,35 +96,6 @@ pause B  0100 1100 (0x4C) 11111010 1100 0100 (0xFAC4)
 */
 
 //arduino pins
-const uint8_t PIN_DATA = D2;
-const uint8_t PIN_BUSY = D1;
-const uint8_t RESPONSE = 4;//for loop stopping at event like motor start
-
-uint16_t last_cmd = 1;
-uint8_t interface = 16;
-
-//timing XS8
-const uint8_t START_BIT_L_8 = 1;
-const uint8_t START_BIT_H_8 = 10;
-const uint8_t BIT_0L_8 = 10;
-const uint8_t BIT_1L_8 = 5;
-const uint8_t BIT_H_8 = 5;
-
-//timing SL16
-const uint8_t START_BIT_L_16 = 5;
-const uint8_t START_BIT_H_16 = 5;
-const uint8_t BIT_0L_16 = 5;
-const uint8_t BIT_1L_16 = 2;
-const uint8_t BIT_H_16 = 2;
-
-//delays
-uint8_t START_BIT_L;
-uint8_t START_BIT_H;
-uint8_t BIT_0L;
-uint8_t BIT_1L;
-uint8_t BIT_H;
-
-void set_interface(int i);
 
 void receiveMessage(uint8_t *data, size_t length);
 
@@ -123,8 +108,6 @@ void handleCommand(int valueIO);
 void print(String contentIO, int filterIO = 0);
 
 void println(String contentIO, int filterIO = 0);
-
-void status_led(int durationIO);
 
 void print_info();
 
@@ -141,6 +124,8 @@ void setup() {
     Serial.begin(115200);
     Serial.setDebugOutput(true);
 
+    prepare();
+
     // Connect to Wi-Fi Network.
     WiFi.begin(ssid, password);
 
@@ -150,8 +135,12 @@ void setup() {
         Serial.print(".");
 
         // Let Status LED Blink.
-        status_led(150);
+        Device::status_led(150);
     }
+
+    // Prepare OTA for Remote Programming.
+    //ArduinoOTA.setHostname("energyswitch");
+    //ArduinoOTA.setPassword("ByteSwitch");
 
     // Print Success Message.
     Serial.println("Connected to WiFi.");
@@ -174,32 +163,41 @@ void setup() {
     // Prepare Volume Slider.
     volume.setMax(100);
     volume.setMin(0);
+    volume.setState(0);
     volume.setName("Volume");
     volume.setIcon("mdi:volume-medium");
     volume.setMode(HANumber::ModeSlider);
+    volume.onCommand(MQTT::onVolume);
 
     // Prepare Mute Switch.
     mute.setName("Mute");
     mute.setIcon("mdi:volume-off");
+    mute.onCommand(MQTT::onMute);
 
     // Prepare Standby Switch.
     standby.setName("Standby");
     standby.setIcon("mdi:power-sleep");
+    standby.onCommand(MQTT::onStandby);
 
     // Prepare Power Switch.
     power.setName("Power");
     power.setIcon("mdi:power");
+    power.onCommand(MQTT::onPower);
+
+    // Prepare BUS Version.
+    version.setName("Typ");
+    version.setIcon("mdi:knob");
+    version.setOptions("XS8;SL16");
+    version.onCommand(MQTT::onVersion);
+    version.setCurrentState((Kenwood::getInterface() == 8 ? 0 : 1));
+
 
     // Prepare Input Select.
     input.setName("Input");
-    input.setIcon("mdi:knob");
+    input.setIcon("mdi:cable");
     input.setOptions("TV;Phono");
-
-    // Prepare BUS Version.
-    version.setIcon("mdi:cable-data");
-    version.setName("BUS-Version");
-    version.setOptions("XS8;SL16");
-    version.setCurrentState((interface == 8 ? 0 : 1));
+    input.setCurrentState(0);
+    input.onCommand(MQTT::onInput);
 
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
@@ -208,11 +206,11 @@ void setup() {
     // Connect to HomeAssistant.
     mqtt.begin("homeassistant.local", "energyswitch", "energyswitch");
 
-    // Set Input and Output Pins.
-    //setPins();
+    // Set LED Pin.
+    setPins();
 
-    // Set Default Interface Version.
-    //set_interface(-16);
+    // Set Input and Output Pins.
+    Kenwood::prepare();
 
     // Print Info Commands.
     print_info();
@@ -233,10 +231,6 @@ void onMessage(const char *topic, const uint8_t *payload, uint16_t length) {
  * Set Default Pins of Device.
  */
 void setPins() {
-    //pinMode(RESPONSE, INPUT);
-    pinMode(PIN_BUSY, INPUT);
-    pinMode(PIN_DATA, INPUT);
-
     // Set Status LED as Output.
     pinMode(LED_BUILTIN, OUTPUT);
 
@@ -269,146 +263,6 @@ void receiveMessage(uint8_t *data, size_t length) {
     handleCommand(valueIO);
 }
 
-/**
- * Set Bus Interface Version.
- * @param i
- */
-void set_interface(int i) {
-    interface = -i;
-    print("Set interface to ");
-    println(String(interface), DEC);
-    println(String(interface), DEC);
-
-    if (interface == 8) {
-        START_BIT_L = START_BIT_L_8;
-        START_BIT_H = START_BIT_H_8;
-        BIT_0L = BIT_0L_8;
-        BIT_1L = BIT_1L_8;
-        BIT_H = BIT_H_8;
-    } else {
-        START_BIT_L = START_BIT_L_16;
-        START_BIT_H = START_BIT_H_16;
-        BIT_0L = BIT_0L_16;
-        BIT_1L = BIT_1L_16;
-        BIT_H = BIT_H_16;
-    }
-}
-
-/**
- * Send CMD to Receiver.
- * @param cmd
- */
-void send_cmd(uint16_t cmd) {
-    print("Interface ");
-    print(String(interface), DEC);
-    print(" Command ");
-    print(String(cmd), BIN);
-    print(" / 0x");
-    println(String(cmd), HEX);
-
-    // Check if Device is Busy.
-    if (!digitalRead(PIN_BUSY)) {
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, HIGH);
-
-        pinMode(PIN_BUSY, OUTPUT);
-        pinMode(PIN_DATA, OUTPUT);
-        digitalWrite(PIN_BUSY, LOW);
-        digitalWrite(PIN_DATA, LOW);
-        //PIN_BUSY on
-        digitalWrite(PIN_BUSY, HIGH);
-        //start bit
-        delay(START_BIT_L);
-        digitalWrite(PIN_DATA, HIGH);
-        delay(START_BIT_H);
-
-        //PIN_DATA bits
-        for (uint16_t mask = 1U << (interface - 1); mask; mask >>= 1) {
-            digitalWrite(PIN_DATA, LOW);
-            if (cmd & mask)
-                delay(BIT_1L);
-            else
-                delay(BIT_0L);
-            digitalWrite(PIN_DATA, HIGH);
-            delay(BIT_H);
-        }
-
-        //end command
-        digitalWrite(PIN_DATA, LOW);
-        //PIN_BUSY off
-        digitalWrite(PIN_BUSY, LOW);
-        delay(1);
-        //go standby
-        pinMode(PIN_BUSY, INPUT);
-        pinMode(PIN_DATA, INPUT);
-        last_cmd = cmd;
-
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, LOW);
-
-        // Print Debug Message.
-        println("Sent Command to Kenwood");
-    } else {
-        // Let LED Blink 2 Times.
-        status_led(150);
-        status_led(150);
-
-        // Print Busy Message.
-        println("Device is Busy.");
-    }
-}
-
-/**
- * Let Status LED Blink for Duration.
- * @param durationIO
- */
-void status_led(int durationIO) {
-    // Set LED Status for Write Mode.
-    digitalWrite(LED_BUILTIN, HIGH);
-
-    // Wait duration.
-    delay(durationIO);
-
-    // Set LED Status for Write Mode.
-    digitalWrite(LED_BUILTIN, LOW);
-
-    // Wait duration.
-    delay(durationIO);
-}
-
-/**
- * Try all stored Commands.
- * @param wait
- */
-void try_all(int wait) {
-    println("Trying all Commands");
-
-    for (uint16_t cmd = last_cmd; cmd < 1U << (interface - 1); cmd++) {
-        send_cmd(cmd);
-        delay(-wait);
-        if (digitalRead(RESPONSE))
-            break;
-    }
-}
-
-/**
- * Handle given Integer as Command.
- * @param valueIO
- */
-void handleCommand(int valueIO) {
-    // Check for XS8/SL16 Commands.
-    if (valueIO == -8 || valueIO == -16) {
-        set_interface(valueIO);
-    } else if (valueIO == -17) {
-        print_info();
-    } else if (valueIO == -18) {
-        print_device();
-    } else if (valueIO > 0) {
-        send_cmd(valueIO);
-    } else if (valueIO < -16) {
-        try_all(valueIO);
-    }
-}
 
 /**
  * Print Message to Serial and WebSerial.
@@ -435,6 +289,7 @@ void print_info() {
     println("  value <-16 to start a loop to automatically try all commands with delay of |value| ms beginning at 'last command'. Default 'last command' = 1");
 }
 
+/*
 void print_device() {
     // Set Busy Pin to Input.
     pinMode(PIN_BUSY, INPUT);
@@ -469,6 +324,7 @@ void print_device() {
     print("Available: ");
     println(String(device.isAvailable()));
 }
+*/
 
 void loop() {
     // Check if Serial is available.

@@ -30,4 +30,4 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/HomeAssistant.cpp src/Arduino.cpp src/Arduino.h src/HomeAssistant.h)
+add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/MQTT.cpp src/MQTT.h src/Kenwood.h src/Device.cpp)
