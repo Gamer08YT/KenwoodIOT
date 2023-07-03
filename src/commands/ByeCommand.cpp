@@ -5,7 +5,7 @@
 #include "ByeCommand.h"
 #include "Device.h"
 
-void ByeCommand::execute(String *argsIO) {
+void ByeCommand::execute(std::vector<String> argsIO) {
     // Print Goodbye Message.
     Device::println("Goodbye, have a nice Day ;-)");
 

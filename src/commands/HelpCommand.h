@@ -6,6 +6,7 @@
 #define KENWOODIOT_HELPCOMMAND_H
 
 
+#include <vector>
 #include "Command.h"
 
 class HelpCommand : public Command {
@@ -18,7 +19,7 @@ public:
         return "Display Help Page.";
     }
 
-    void execute(String *argsIO);
+    void execute(std::vector<String> argsIO);
 };
 
 

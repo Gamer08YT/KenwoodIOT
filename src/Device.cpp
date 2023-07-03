@@ -180,15 +180,22 @@ void Device::handleCommand(String dataIO) {
     bool foundIO = false;
 
     if (dataIO.startsWith("/")) {
+        // Replace Slash Invoke.
+        dataIO.replace("/", "");
+
+        // Split via Spaces.
+        std::vector<String> splitIO = Device::split(dataIO, " ");
+
+        Device::print("Args: ");
+        Device::println(String(splitIO.size()));
+
         // Loop trough Commands and Check or Execute.
         for (Command *commandIO: Device::getCommands()) {
-            // Replace Slash Invoke.
-            dataIO.replace("/", "");
 
             // Check if Command exits/equals.
-            if (dataIO.equalsIgnoreCase(commandIO->invoke())) {
+            if (String(splitIO[0]).equalsIgnoreCase(commandIO->invoke())) {
                 // Execute Commands.
-                commandIO->execute({});
+                commandIO->execute(splitIO);
 
                 // Override Found State.
                 foundIO = true;
@@ -235,6 +242,40 @@ void Device::print_device() {
     //Device::println(String(device.isAvailable()));
 }
 
+
+/**
+ * Split String by delimiter.
+ * @param valueIO
+ * @param delimiterIO
+ * @return
+ */
+std::vector<String> Device::split(String &valueIO, const char *delimiterIO) {
+    // Create new Char Buffer.
+    char *bufferIO = new char[valueIO.length() + 1];
+
+    // Copy String into Buffer.
+    strcpy(bufferIO, valueIO.c_str());
+
+    // Split Token from Buffer.
+    char *itemIO = strtok(bufferIO, delimiterIO);
+
+    // Create new String Buffer.
+    std::vector<String> returnIO;
+
+    // Loop while Item is not null.
+    while (itemIO != NULL) {
+        // Append String to Array.
+        returnIO.push_back(itemIO);
+
+        // Get next Item.
+        itemIO = strtok(NULL, delimiterIO);
+    }
+
+    // Delete Buffer, to Avoid Memory Problems.
+    delete[] bufferIO;
+
+    return returnIO;
+}
 
 
 

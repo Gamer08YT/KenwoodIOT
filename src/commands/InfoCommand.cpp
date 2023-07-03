@@ -5,7 +5,10 @@
 #include "InfoCommand.h"
 #include "Device.h"
 
-void InfoCommand::execute(String *argsIO) {
+void InfoCommand::execute(std::vector<String> argsIO) {
+    Device::print("Args given: ");
+    Device::println(String(argsIO.size()));
+
     // Print Device Info.
     Device::print_device();
 }

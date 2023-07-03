@@ -18,7 +18,7 @@ public:
         return "Empty Description.";
     }
 
-    virtual void execute(String argsIO[]);
+    virtual void execute(std::vector<String> argsIO);
 };
 
 

@@ -6,6 +6,7 @@
 #define KENWOODIOT_BYECOMMAND_H
 
 
+#include <vector>
 #include "Command.h"
 
 class ByeCommand : public Command {
@@ -18,7 +19,7 @@ public:
         return "Close Telnet Session.";
     }
 
-    void execute(String *argsIO);
+    void execute(std::vector<String> argsIO);
 };
 
 

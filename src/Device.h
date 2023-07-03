@@ -43,6 +43,8 @@ public:
     static void handleCommand(String dataIO);
 
     static void print_device();
+
+    static std::vector<String> split(String &valueIO, const char *delimiterIO = "");
 };
 
 

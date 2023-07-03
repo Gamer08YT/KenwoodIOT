@@ -6,6 +6,7 @@
 #define KENWOODIOT_INFOCOMMAND_H
 
 
+#include <vector>
 #include "Command.h"
 
 class InfoCommand : public Command {
@@ -18,7 +19,7 @@ public:
         return "Get Device Information.";
     }
 
-    void execute(String *argsIO);
+    void execute(std::vector<String> argsIO);
 };
 
 

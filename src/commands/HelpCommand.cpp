@@ -5,7 +5,7 @@
 #include "HelpCommand.h"
 #include "Device.h"
 
-void HelpCommand::execute(String *argsIO) {
+void HelpCommand::execute(std::vector<String> argsIO) {
     // Loop trough Commands and Check or Execute.
     for (Command *commandIO: Device::getCommands()) {
         // Print Invoke with Description.
