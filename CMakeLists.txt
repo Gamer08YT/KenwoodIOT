@@ -30,4 +30,4 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/commands/Command.h src/commands/InfoCommand.h src/commands/HelpCommand.h src/commands/ByeCommand.h)
+add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/commands/Command.h src/commands/InfoCommand.h src/commands/HelpCommand.h src/commands/ByeCommand.h src/commands/ResetCommand.h src/commands/SendCommand.h src/commands/ClearCommand.h)

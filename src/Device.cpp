@@ -4,12 +4,14 @@
 
 #include <Arduino.h>
 #include "Device.h"
-#include "EscapeCodes.h"
 #include "commands/Command.h"
 #include "commands/InfoCommand.h"
 #include "commands/HelpCommand.h"
 #include "commands/ByeCommand.h"
 #include "Kenwood.h"
+#include "commands/ResetCommand.h"
+#include "commands/SendCommand.h"
+#include "commands/ClearCommand.h"
 
 
 // Store Telnet Instance.
@@ -141,6 +143,14 @@ ESPTelnet Device::getTelnet() {
 }
 
 /**
+ * Return ANSI Codes Instance.
+ * @return
+ */
+EscapeCodes Device::getANSI() {
+    return ansi;
+}
+
+/**
  * Return registered Commands.
  * @return
  */
@@ -169,6 +179,9 @@ void Device::addCommands() {
     Device::addCommand(new HelpCommand());
     Device::addCommand(new InfoCommand());
     Device::addCommand(new ByeCommand());
+    Device::addCommand(new ResetCommand());
+    Device::addCommand(new SendCommand());
+    Device::addCommand(new ClearCommand());
 }
 
 /**
@@ -235,6 +248,10 @@ void Device::print_device() {
     Device::println(WiFi.macAddress());
     Device::print("IP-Address: ");
     Device::println(WiFi.localIP().toString());
+    Device::print("VCC: ");
+    Device::println(String((float) (ESP.getVcc() / 1024.0f)));
+    Device::print("Chip-ID: ");
+    Device::println(String(ESP.getChipId()));
 
     // Print MQTT Info.
     Device::println("\nMQTT:");
@@ -270,6 +287,8 @@ std::vector<String> Device::split(String &valueIO, const char *delimiterIO) {
 
     return returnIO;
 }
+
+
 
 
 
