@@ -34,9 +34,9 @@ public:
 
     static ESPTelnet getTelnet();
 
-    static std::vector<Command> getCommands();
+    static std::vector<Command *> getCommands();
 
-    static void addCommand(Command commandIO);
+    static void addCommand(Command* commandIO);
 
     static void addCommands();
 };

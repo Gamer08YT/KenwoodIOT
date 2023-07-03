@@ -9,9 +9,14 @@
 #include "Command.h"
 
 class InfoCommand : public Command {
-    String invoke = "info";
+public:
+    const char* invoke() override {
+        return "info";
+    }
 
-    String description = "Displays Debug Information.";
+    const char* description() override {
+        return "Get Device Information.";
+    }
 };
 
 

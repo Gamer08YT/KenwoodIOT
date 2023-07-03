@@ -14,7 +14,7 @@ ESPTelnet telnet;
 EscapeCodes ansi;
 
 // Store Commands.
-std::vector<Command> commands;
+std::vector<Command *> commands;
 
 /**
  * Let Status LED Blink for Duration.
@@ -130,7 +130,7 @@ ESPTelnet Device::getTelnet() {
  * Return registered Commands.
  * @return
  */
-std::vector<Command> Device::getCommands() {
+std::vector<Command *> Device::getCommands() {
     return commands;
 }
 
@@ -138,19 +138,20 @@ std::vector<Command> Device::getCommands() {
  * Add Command to Vector.
  * @param commandIO
  */
-void Device::addCommand(Command commandIO) {
-    commands.push_back(commandIO);
-
+void Device::addCommand(Command *commandIO) {
     // Print Debug Message.
     Device::print("Added Command ");
-    Device::println(commandIO.invoke);
+    Device::println(commandIO->invoke());
+
+    // Push Command into Vector.
+    commands.push_back(commandIO);
 }
 
 /**
  * Register all Hard-Coded Commands.
  */
 void Device::addCommands() {
-    Device::addCommand(InfoCommand());
+    Device::addCommand(new InfoCommand());
 }
 
 

@@ -10,9 +10,13 @@
 
 class Command {
 public:
-    String invoke;
+    virtual const char *invoke() {
+        return "empty";
+    }
 
-    String description;
+    virtual const char *description() {
+        return "Empty Description.";
+    }
 
     void execute(String argsIO[]);
 };
