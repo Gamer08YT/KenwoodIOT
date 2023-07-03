@@ -10,6 +10,16 @@ class Device {
 
 public:
     static void status_led(int durationIO);
+
+    static void beginTelnet();
+
+    static void println(String dataIO);
+
+    static void print(String dataIO);
+
+    static void handleTelnet();
+
+    static void write(String dataIO);
 };
 
 

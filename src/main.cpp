@@ -6,8 +6,11 @@
 #include <WiFiClient.h>
 #include <HomeAssistant.h>
 #include <MQTT.h>
+
+// Device Classes
 #include "Kenwood.h"
 #include "Device.h"
+
 
 /*
     General commands:
@@ -137,6 +140,9 @@ void setup() {
         // Let Status LED Blink.
         Device::status_led(150);
     }
+
+    // Start Telnet Stream.
+    Device::beginTelnet();
 
     // Prepare OTA for Remote Programming.
     //ArduinoOTA.setHostname("energyswitch");
@@ -338,5 +344,9 @@ void loop() {
         mqtt.loop();
     }*/
 
+    // Handle Telnet Input Stream.
+    Device::handleTelnet();
+
+    // Handle MQTT Stream.
     mqtt.loop();
 }

@@ -195,7 +195,7 @@ void Kenwood::send_cmd(uint16_t cmd) {
 }
 
 /**
- * Preapre Device.
+ * Prepare Device.
  */
 void Kenwood::prepare() {
     //pinMode(RESPONSE, INPUT);

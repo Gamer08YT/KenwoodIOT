@@ -4,6 +4,7 @@
 
 #include "MQTT.h"
 #include "Kenwood.h"
+#include "Device.h"
 
 /**
  * On Standby Event.
@@ -11,8 +12,8 @@
  * @param sender
  */
 void MQTT::onStandby(bool state, HASwitch *sender) {
-    Serial.print("Set Standby to ");
-    Serial.println(state);
+    Device::print("Set Standby to ");
+    Device::println(String(state));
 
     // Toggle AMP Standby State.
     Kenwood::standby(state);
@@ -26,8 +27,8 @@ void MQTT::onStandby(bool state, HASwitch *sender) {
  * @param sender
  */
 void MQTT::onVolume(HANumeric state, HANumber *sender) {
-    Serial.print("Set Volume to ");
-    Serial.println(state.toInt8());
+    Device::print("Set Volume to ");
+    Device::println(String(state.toInt8()));
 
     sender->setState(state);
 }
@@ -38,8 +39,8 @@ void MQTT::onVolume(HANumeric state, HANumber *sender) {
  * @param sender
  */
 void MQTT::onMute(bool state, HASwitch *sender) {
-    Serial.print("Set Mute to ");
-    Serial.println(state);
+    Device::print("Set Mute to ");
+    Device::println(String(state));
 
     sender->setState(state);
 }
@@ -50,8 +51,8 @@ void MQTT::onMute(bool state, HASwitch *sender) {
  * @param sender
  */
 void MQTT::onPower(bool state, HASwitch *sender) {
-    Serial.print("Set Power to ");
-    Serial.println(state);
+    Device::print("Set Power to ");
+    Device::println(String(state));
 
     sender->setState(state);
 }
@@ -60,8 +61,8 @@ void MQTT::onPower(bool state, HASwitch *sender) {
  * On Input Change Event.
  */
 void MQTT::onInput(int8_t state, HASelect *sender) {
-    Serial.print("Set Input to ");
-    Serial.println(state);
+    Device::print("Set Input to ");
+    Device::println(String(state));
 
     // Set Input Channel.
     Kenwood::setInput(state);
@@ -75,8 +76,8 @@ void MQTT::onInput(int8_t state, HASelect *sender) {
  * @param sender
  */
 void MQTT::onVersion(int8_t state, HASelect *sender) {
-    Serial.print("Set Version to ");
-    Serial.println(state);
+    Device::print("Set Version to ");
+    Device::println(String(state));
 
     // Set Interface of Bus.
     Kenwood::set_interface((state == 0 ? -8 : -16));
