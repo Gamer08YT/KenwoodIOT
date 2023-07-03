@@ -141,6 +141,9 @@ void setup() {
         Device::status_led(150);
     }
 
+    // Register all Commands.
+    Device::addCommands();
+
     // Start Telnet Stream.
     Device::beginTelnet();
 
@@ -241,7 +244,7 @@ void setPins() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     // Disable LED.
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 /**
@@ -346,6 +349,11 @@ void loop() {
 
     // Handle Telnet Input Stream.
     Device::handleTelnet();
+
+    // Handle Serial for Telnet.
+    if (Serial.available()) {
+        Device::getTelnet().print(Serial.read());
+    }
 
     // Handle MQTT Stream.
     mqtt.loop();

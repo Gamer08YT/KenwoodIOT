@@ -1,0 +1,21 @@
+//
+// Created by Jan Heil on 03.07.2023.
+//
+
+#ifndef KENWOODIOT_COMMAND_H
+#define KENWOODIOT_COMMAND_H
+
+
+#include <WString.h>
+
+class Command {
+public:
+    String invoke;
+
+    String description;
+
+    void execute(String argsIO[]);
+};
+
+
+#endif //KENWOODIOT_COMMAND_H
