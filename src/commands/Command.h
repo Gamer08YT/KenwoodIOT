@@ -18,7 +18,7 @@ public:
         return "Empty Description.";
     }
 
-    void execute(String argsIO[]);
+    virtual void execute(String argsIO[]);
 };
 
 

@@ -7,6 +7,7 @@
 #include "EscapeCodes.h"
 #include "commands/Command.h"
 #include "commands/InfoCommand.h"
+#include "commands/HelpCommand.h"
 
 
 // Store Telnet Instance.
@@ -93,10 +94,18 @@ void Device::onConnect(String ipIO) {
     telnet.print(ansi.cls());
     telnet.print(ansi.home());
     telnet.print(ansi.setFG(ANSI_BRIGHT_WHITE));
-    telnet.println("\nWelcome " + telnet.getIP());
+    telnet.print("\nWelcome " + telnet.getIP());
+    telnet.print(" found ");
+    telnet.print(commands.size());
+    telnet.print((commands.size() == 1 ? " Command" : " Commands"));
+    telnet.println(" :-)");
     telnet.println("(Use ^] + q  to disconnect.)");
     telnet.print(ansi.reset());
     telnet.print("\n\n> ");
+
+    Command *command = new InfoCommand();
+    Serial.println(command->invoke());
+    delete command;
 }
 
 /**
@@ -105,6 +114,9 @@ void Device::onConnect(String ipIO) {
  */
 void Device::onInput(String dataIO) {
     Serial.println(dataIO);
+
+    // Handle Command Input.
+    Device::handleCommand(dataIO);
 
     // Print Shell Line.
     telnet.print("> ");
@@ -141,7 +153,8 @@ std::vector<Command *> Device::getCommands() {
 void Device::addCommand(Command *commandIO) {
     // Print Debug Message.
     Device::print("Added Command ");
-    Device::println(commandIO->invoke());
+    Serial.println(commandIO->invoke());
+    Device::println(" to Device.");
 
     // Push Command into Vector.
     commands.push_back(commandIO);
@@ -151,7 +164,37 @@ void Device::addCommand(Command *commandIO) {
  * Register all Hard-Coded Commands.
  */
 void Device::addCommands() {
+    Device::addCommand(new HelpCommand());
     Device::addCommand(new InfoCommand());
+}
+
+/**
+ * Handle Command Input.
+ * @param dataIO
+ */
+void Device::handleCommand(String dataIO) {
+    // Store Found State.
+    bool foundIO = false;
+
+    if (dataIO.startsWith("/")) {
+        // Loop trough Commands and Check or Execute.
+        for (Command *commandIO: Device::getCommands()) {
+            // Check if Command exits/equals.
+            if (dataIO.equalsIgnoreCase(commandIO->invoke())) {
+                // Execute Commands.
+                commandIO->execute({});
+
+                // Override Found State.
+                foundIO = true;
+            }
+        }
+
+        // Print Error Message.
+        if (!foundIO) {
+            Device::print("Can't find Command use /help to Display all Commands.");
+            Device::println(dataIO);
+        }
+    }
 }
 
 

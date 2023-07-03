@@ -39,6 +39,8 @@ public:
     static void addCommand(Command* commandIO);
 
     static void addCommands();
+
+    static void handleCommand(String dataIO);
 };
 
 

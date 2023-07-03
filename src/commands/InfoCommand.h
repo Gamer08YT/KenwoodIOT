@@ -17,6 +17,8 @@ public:
     const char* description() override {
         return "Get Device Information.";
     }
+
+    void execute(String *argsIO);
 };
 
 
