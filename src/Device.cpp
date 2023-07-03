@@ -186,14 +186,19 @@ void Device::handleCommand(String dataIO) {
         // Split via Spaces.
         std::vector<String> splitIO = Device::split(dataIO, " ");
 
-        Device::print("Args: ");
-        Device::println(String(splitIO.size()));
-
         // Loop trough Commands and Check or Execute.
         for (Command *commandIO: Device::getCommands()) {
-
             // Check if Command exits/equals.
             if (String(splitIO[0]).equalsIgnoreCase(commandIO->invoke())) {
+
+                // Delete first Vector Item.
+                if (!splitIO.empty())
+                    splitIO.erase(splitIO.begin());
+
+                // Print Debug Message.
+                Device::print("Args: ");
+                Device::println(String(splitIO.size()));
+
                 // Execute Commands.
                 commandIO->execute(splitIO);
 
@@ -250,29 +255,18 @@ void Device::print_device() {
  * @return
  */
 std::vector<String> Device::split(String &valueIO, const char *delimiterIO) {
-    // Create new Char Buffer.
-    char *bufferIO = new char[valueIO.length() + 1];
-
-    // Copy String into Buffer.
-    strcpy(bufferIO, valueIO.c_str());
-
-    // Split Token from Buffer.
-    char *itemIO = strtok(bufferIO, delimiterIO);
-
-    // Create new String Buffer.
     std::vector<String> returnIO;
-
-    // Loop while Item is not null.
-    while (itemIO != NULL) {
-        // Append String to Array.
-        returnIO.push_back(itemIO);
-
-        // Get next Item.
-        itemIO = strtok(NULL, delimiterIO);
+    int indexIO = 0;
+    while (true) {
+        int positionIO = valueIO.indexOf(delimiterIO, indexIO);
+        if (positionIO == -1) {
+            returnIO.push_back(valueIO.substring(indexIO));
+            break;
+        } else {
+            returnIO.push_back(valueIO.substring(indexIO, positionIO));
+            indexIO = positionIO + strlen(delimiterIO);
+        }
     }
-
-    // Delete Buffer, to Avoid Memory Problems.
-    delete[] bufferIO;
 
     return returnIO;
 }
