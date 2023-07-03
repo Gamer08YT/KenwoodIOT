@@ -8,6 +8,8 @@
 #include "commands/Command.h"
 #include "commands/InfoCommand.h"
 #include "commands/HelpCommand.h"
+#include "commands/ByeCommand.h"
+#include "Kenwood.h"
 
 
 // Store Telnet Instance.
@@ -166,6 +168,7 @@ void Device::addCommand(Command *commandIO) {
 void Device::addCommands() {
     Device::addCommand(new HelpCommand());
     Device::addCommand(new InfoCommand());
+    Device::addCommand(new ByeCommand());
 }
 
 /**
@@ -179,6 +182,9 @@ void Device::handleCommand(String dataIO) {
     if (dataIO.startsWith("/")) {
         // Loop trough Commands and Check or Execute.
         for (Command *commandIO: Device::getCommands()) {
+            // Replace Slash Invoke.
+            dataIO.replace("/", "");
+
             // Check if Command exits/equals.
             if (dataIO.equalsIgnoreCase(commandIO->invoke())) {
                 // Execute Commands.
@@ -195,6 +201,38 @@ void Device::handleCommand(String dataIO) {
             Device::println(dataIO);
         }
     }
+}
+
+void Device::print_device() {
+    // Set Busy Pin to Input.
+    pinMode(Kenwood::getBusy(), INPUT);
+
+    // Set Data Pin to Input.
+    pinMode(Kenwood::getData(), INPUT);
+
+    // Print Pin Info.
+    Device::println("Pins:");
+    Device::print("Busy: ");
+    Device::println(String(digitalRead(Kenwood::getBusy())));
+    Device::print("Data: ");
+    Device::println(String(digitalRead(Kenwood::getData())));
+
+    // Print Device Info.
+    Device::println("\nDevice:");
+    Device::print("MAC: ");
+    Device::println(WiFi.macAddress());
+    Device::print("IP-Address: ");
+    Device::println(WiFi.localIP().toString());
+
+    // Print MQTT Info.
+    Device::println("\nMQTT:");
+    Device::print("Connected: ");
+    //Device::println(String(mqtt.isConnected()));
+
+    // Print HomeAssistant Info.
+    Device::println("HomeAssistant:\n");
+    Device::print("Available: ");
+    //Device::println(String(device.isAvailable()));
 }
 
 

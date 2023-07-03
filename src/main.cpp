@@ -298,43 +298,6 @@ void print_info() {
     println("  value <-16 to start a loop to automatically try all commands with delay of |value| ms beginning at 'last command'. Default 'last command' = 1");
 }
 
-/*
-void print_device() {
-    // Set Busy Pin to Input.
-    pinMode(PIN_BUSY, INPUT);
-
-    // Set Data Pin to Input.
-    pinMode(PIN_DATA, INPUT);
-
-    // Print Pin Info.
-    println("Pins:");
-    print("Busy: ");
-    println(String(digitalRead(PIN_BUSY)));
-    print("Data: ");
-    println(String(digitalRead(PIN_DATA)));
-
-    // Print Device Info.
-    println("");
-    println("Device:");
-    print("MAC: ");
-    println(WiFi.macAddress());
-    print("IP-Address: ");
-    println(WiFi.localIP().toString());
-
-    // Print MQTT Info.
-    println("");
-    println("MQTT:\n");
-    print("Connected: ");
-    println(String(mqtt.isConnected()));
-
-    // Print HomeAssistant Info.
-    println("");
-    println("HomeAssistant:\n");
-    print("Available: ");
-    println(String(device.isAvailable()));
-}
-*/
-
 void loop() {
     // Check if Serial is available.
     /*while (Serial.available()) {

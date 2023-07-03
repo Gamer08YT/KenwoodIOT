@@ -211,4 +211,12 @@ int Kenwood::getInterface() {
     return interface;
 }
 
+uint8_t Kenwood::getData() {
+    return PIN_DATA;
+}
+
+uint8_t Kenwood::getBusy() {
+    return PIN_BUSY;
+}
+
 

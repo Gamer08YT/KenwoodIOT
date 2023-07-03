@@ -36,11 +36,13 @@ public:
 
     static std::vector<Command *> getCommands();
 
-    static void addCommand(Command* commandIO);
+    static void addCommand(Command *commandIO);
 
     static void addCommands();
 
     static void handleCommand(String dataIO);
+
+    static void print_device();
 };
 
 

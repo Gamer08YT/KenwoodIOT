@@ -26,6 +26,10 @@ public:
     static int getInterface();
 
     static void setInput(int state);
+
+    static uint8_t getData();
+
+    static uint8_t getBusy();
 };
 
 
