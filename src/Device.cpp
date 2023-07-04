@@ -12,11 +12,15 @@
 #include "commands/ResetCommand.h"
 #include "commands/SendCommand.h"
 #include "commands/ClearCommand.h"
+#include "ElegantOTA.h"
 
 
 // Store Telnet Instance.
 ESPTelnet telnet;
 EscapeCodes ansi;
+
+// Store WebServer Instance.
+ESP8266WebServer server(80);
 
 // Store Commands.
 std::vector<Command *> commands;
@@ -286,6 +290,34 @@ std::vector<String> Device::split(String &valueIO, const char *delimiterIO) {
     }
 
     return returnIO;
+}
+
+/**
+ * Begin OTA (Over the Air) Server.
+ */
+void Device::beginOTA() {
+    // Begin Elegant OTA via Web Server.
+    ElegantOTA.begin(&server, "ByteSwitch", "ByteSwitch");
+}
+
+/**
+ * Begin Web Server.
+ */
+void Device::beginWebserver() {
+    // Send Default Index Message.
+    server.on("/", []() {
+        server.send(200, "text/html", "<h1>EnergySwitch</h1><h3>Made with Love by Jan Heil (www.byte-store.de)</h3>");
+    });
+
+    // Begin Server.
+    server.begin();
+}
+
+/**
+ * Handle WebServer Client/s.
+ */
+void Device::handleWebserver() {
+    server.handleClient();
 }
 
 

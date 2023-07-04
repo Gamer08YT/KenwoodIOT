@@ -48,6 +48,12 @@ public:
     static void print_device();
 
     static std::vector<String> split(String &valueIO, const char *delimiterIO = "");
+
+    static void beginOTA();
+
+    static void beginWebserver();
+
+    static void handleWebserver();
 };
 
 

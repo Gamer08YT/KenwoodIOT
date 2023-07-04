@@ -100,6 +100,8 @@ pause B  0100 1100 (0x4C) 11111010 1100 0100 (0xFAC4)
 
 //arduino pins
 
+class beginWebserver;
+
 void receiveMessage(uint8_t *data, size_t length);
 
 void try_all(int wait);
@@ -140,6 +142,12 @@ void setup() {
         // Let Status LED Blink.
         Device::status_led(150);
     }
+
+    // Begin OTA Server.
+    Device::beginOTA();
+
+    // Start WebServer
+    Device::beginWebserver();
 
     // Register all Commands.
     Device::addCommands();
@@ -309,6 +317,9 @@ void loop() {
         // Loop MQTT.
         mqtt.loop();
     }*/
+
+    // Handle WebServer Client/s.
+    Device::handleWebserver();
 
     // Handle Telnet Input Stream.
     Device::handleTelnet();
