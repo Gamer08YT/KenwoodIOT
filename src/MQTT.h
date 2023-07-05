@@ -9,6 +9,7 @@
 #include "utils/HANumeric.h"
 #include "device-types/HANumber.h"
 #include "device-types/HASelect.h"
+#include "device-types/HAButton.h"
 
 class MQTT {
 public:
@@ -23,6 +24,8 @@ public:
     static void onInput(int8_t state, HASelect *sender);
 
     static void onVersion(int8_t state, HASelect *sender);
+
+    static void onReset(HAButton *button);
 };
 
 

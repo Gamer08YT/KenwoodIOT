@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#define ARDUINOHA_DEBUG
+
 // Webserver and WebSerial
 #include <ESP8266WiFi.h>
 #include <ArduinoHA.h>
@@ -11,6 +13,10 @@
 #include "Kenwood.h"
 #include "Device.h"
 #include "Watcher.h"
+#include "SimpleTimer.h"
+
+// Timer for HA Updates.
+SimpleTimer timer(1500);
 
 
 /*
@@ -40,7 +46,7 @@ WiFiClient client;
 HADevice device;
 
 // Define Home Assistant MQTT Instance.
-HAMqtt mqtt(client, device);
+HAMqtt mqtt(client, device, 24);
 
 // Store Volume Slider.
 HANumber volume("Volume");
@@ -59,6 +65,9 @@ HASwitch standby("Standby");
 
 // Store Power Switch.
 HASwitch power("Power");
+
+// Store Reset Button.
+HAButton reset("Reset");
 
 // Store Current Meter.
 HASensorNumber current("Current");
@@ -207,13 +216,17 @@ void setup() {
     power.setIcon("mdi:power");
     power.onCommand(MQTT::onPower);
 
+    // Prepare Reset Button.
+    // reset.setIcon("mdi:restart");
+    reset.setName("Reset");
+    reset.onCommand(MQTT::onReset);
+
     // Prepare BUS Version.
     version.setName("Typ");
     version.setIcon("mdi:knob");
     version.setOptions("XS8;SL16");
     version.onCommand(MQTT::onVersion);
     version.setCurrentState((Kenwood::getInterface() == 8 ? 0 : 1));
-
 
     // Prepare Input Select.
     input.setName("Input");
@@ -346,4 +359,13 @@ void loop() {
 
     // Handle Measurement of Current.
     Watcher::handleMeasurement();
+
+    // Check for Timer State.
+    if (timer.isReady()) {
+        // Set Current Value.
+        current.setCurrentValue((float) Watcher::getIRMS());
+
+        // Reset Timer to Loop.
+        timer.reset();
+    }
 }

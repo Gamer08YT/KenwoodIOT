@@ -84,3 +84,12 @@ void MQTT::onVersion(int8_t state, HASelect *sender) {
 
     sender->setState(state);
 }
+
+/**
+ * On Reset Button Press.
+ * @param button
+ */
+void MQTT::onReset(HAButton *button) {
+    // Print Debug Information.
+    Device::println("Resetting TV Power.");
+}

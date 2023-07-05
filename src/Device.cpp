@@ -258,9 +258,11 @@ void Device::print_device() {
     Device::print("Chip-ID: ");
     Device::println(String(ESP.getChipId()));
     Device::print("Current: ");
-    Device::println(String(Watcher::getIRMS()));
-    Device::print("A0: ");
-    Device::println(String(Watcher::getAO()));
+    Device::print(String(Watcher::getIRMS()));
+    Device::println("A");
+    Device::print("Power: ");
+    Device::print(String(Watcher::getIRMS() * 230));
+    Device::println("W");
 
     // Print MQTT Info.
     Device::println("\nMQTT:");
