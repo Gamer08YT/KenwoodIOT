@@ -133,38 +133,52 @@ void Kenwood::try_all(int wait) {
  * @param cmd
  */
 void Kenwood::send_cmd(uint16_t cmd) {
-    Serial.print("Interface ");
-    Serial.print(interface, DEC);
-    Serial.print(" Command ");
-    Serial.print(cmd, BIN);
-    Serial.print(" / 0x");
-    Serial.println(cmd, HEX);
+    Device::print("Interface ");
+    Device::print(String(interface, DEC));
+    Device::print(" Command ");
+    Device::print(String(cmd, BIN));
+    Device::print(" / 0x");
+    Device::println(String(cmd, HEX));
 
     // Check if Device is Busy.
     if (!digitalRead(PIN_BUSY)) {
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, HIGH);
-
         pinMode(PIN_BUSY, OUTPUT);
         pinMode(PIN_DATA, OUTPUT);
         Serial.begin(115200);
         digitalWrite(PIN_BUSY, LOW);
         digitalWrite(PIN_DATA, LOW);
-        //PIN_BUSY on
+
+        // Set Busy Lock.
         digitalWrite(PIN_BUSY, HIGH);
-        //start bit
+
+        // Set LED Status for Write Mode.
+        digitalWrite(LED_BUILTIN, HIGH);
+
+        // Send Start Bit with Delay.
         delay(START_BIT_L);
         digitalWrite(PIN_DATA, HIGH);
+
+        // Set LED Status for Write Mode.
+        digitalWrite(LED_BUILTIN, LOW);
+
+        // Delay next Bit.
         delay(START_BIT_H);
 
         //PIN_DATA bits
         for (uint16_t mask = 1U << (interface - 1); mask; mask >>= 1) {
             digitalWrite(PIN_DATA, LOW);
+
+            // Set LED Status for Write Mode.
+            digitalWrite(LED_BUILTIN, HIGH);
+
             if (cmd & mask)
                 delay(BIT_1L);
             else
                 delay(BIT_0L);
             digitalWrite(PIN_DATA, HIGH);
+
+            // Set LED Status for Write Mode.
+            digitalWrite(LED_BUILTIN, LOW);
             delay(BIT_H);
         }
 
@@ -173,6 +187,7 @@ void Kenwood::send_cmd(uint16_t cmd) {
         //PIN_BUSY off
         digitalWrite(PIN_BUSY, LOW);
         delay(1);
+
         //go standby
         pinMode(PIN_BUSY, INPUT);
         pinMode(PIN_DATA, INPUT);
@@ -180,17 +195,17 @@ void Kenwood::send_cmd(uint16_t cmd) {
         last_cmd = cmd;
 
         // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, LOW);
+        digitalWrite(LED_BUILTIN, HIGH);
 
         // Print Debug Message.
-        Serial.println("Sent Command to Kenwood");
+        Device::println("Sent Command to Kenwood");
     } else {
         // Let LED Blink 2 Times.
         Device::status_led(150);
         Device::status_led(150);
 
         // Print Busy Message.
-        Serial.println("Device is Busy.");
+        Device::println("Device is Busy.");
     }
 }
 

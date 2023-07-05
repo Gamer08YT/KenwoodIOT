@@ -13,6 +13,7 @@
 #include "commands/SendCommand.h"
 #include "commands/ClearCommand.h"
 #include "ElegantOTA.h"
+#include "Watcher.h"
 
 
 // Store Telnet Instance.
@@ -256,6 +257,10 @@ void Device::print_device() {
     Device::println(String((float) (ESP.getVcc() / 1024.0f)));
     Device::print("Chip-ID: ");
     Device::println(String(ESP.getChipId()));
+    Device::print("Current: ");
+    Device::println(String(Watcher::getIRMS()));
+    Device::print("A0: ");
+    Device::println(String(Watcher::getAO()));
 
     // Print MQTT Info.
     Device::println("\nMQTT:");
@@ -297,7 +302,7 @@ std::vector<String> Device::split(String &valueIO, const char *delimiterIO) {
  */
 void Device::beginOTA() {
     // Begin Elegant OTA via Web Server.
-    ElegantOTA.begin(&server, "ByteSwitch", "ByteSwitch");
+    ElegantOTA.begin(&server/*, "ByteSwitch", "ByteSwitch"*/);
 }
 
 /**
@@ -307,6 +312,11 @@ void Device::beginWebserver() {
     // Send Default Index Message.
     server.on("/", []() {
         server.send(200, "text/html", "<h1>EnergySwitch</h1><h3>Made with Love by Jan Heil (www.byte-store.de)</h3>");
+    });
+
+    // Send Current Info Message.
+    server.on("/current", []() {
+        server.send(200, "text/html", String(Watcher::getIRMS()));
     });
 
     // Begin Server.

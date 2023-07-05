@@ -10,6 +10,7 @@
 // Device Classes
 #include "Kenwood.h"
 #include "Device.h"
+#include "Watcher.h"
 
 
 /*
@@ -59,6 +60,9 @@ HASwitch standby("Standby");
 // Store Power Switch.
 HASwitch power("Power");
 
+// Store Current Meter.
+HASensorNumber current("Current");
+
 /**
  * Bread Board:
  * -----------------
@@ -101,6 +105,8 @@ pause B  0100 1100 (0x4C) 11111010 1100 0100 (0xFAC4)
 //arduino pins
 
 class beginWebserver;
+
+class handleMeasurement;
 
 void receiveMessage(uint8_t *data, size_t length);
 
@@ -216,6 +222,11 @@ void setup() {
     input.setCurrentState(0);
     input.onCommand(MQTT::onInput);
 
+    // Prepare Current Meter.
+    current.setName("Current");
+    current.setUnitOfMeasurement("mA");
+    //current.setIcon("mdi:current-ac");
+
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
     mqtt.onConnected(onConnected);
@@ -228,6 +239,7 @@ void setup() {
 
     // Set Input and Output Pins.
     Kenwood::prepare();
+    Watcher::prepare();
 
     // Print Info Commands.
     print_info();
@@ -331,4 +343,7 @@ void loop() {
 
     // Handle MQTT Stream.
     mqtt.loop();
+
+    // Handle Measurement of Current.
+    Watcher::handleMeasurement();
 }
