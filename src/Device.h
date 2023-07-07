@@ -10,6 +10,8 @@
 #include "ESPTelnet.h"
 #include "commands/Command.h"
 #include "EscapeCodes.h"
+#include "HAMqtt.h"
+#include "IotWebConf.h"
 
 
 class Device {
@@ -54,6 +56,22 @@ public:
     static void beginWebserver();
 
     static void handleWebserver();
+
+    static WiFiClient getWiFi();
+
+    static WebServer getServer();
+
+    static void beginConfig();
+
+    static void handleConfig();
+
+    static int getTrigger();
+
+    static void setTrigger(uint16_t valueIO);
+
+    static void setType(int8_t state);
+
+    static void setInput(int8_t state);
 };
 
 

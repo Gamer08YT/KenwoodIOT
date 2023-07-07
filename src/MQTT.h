@@ -26,6 +26,8 @@ public:
     static void onVersion(int8_t state, HASelect *sender);
 
     static void onReset(HAButton *button);
+
+    static void onTrigger(HANumeric state, HANumber *sender);
 };
 
 

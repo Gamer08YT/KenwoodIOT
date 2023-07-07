@@ -15,7 +15,7 @@ public:
 
     static void handleMeasurement();
 
-    static double getIRMS();
+    static float getIRMS();
 };
 
 

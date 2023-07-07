@@ -8,6 +8,7 @@
 #include <WiFiClient.h>
 #include <HomeAssistant.h>
 #include <MQTT.h>
+#include <IotWebConf.h>
 
 // Device Classes
 #include "Kenwood.h"
@@ -16,7 +17,7 @@
 #include "SimpleTimer.h"
 
 // Timer for HA Updates.
-SimpleTimer timer(1500);
+SimpleTimer timer(2500);
 
 
 /*
@@ -35,10 +36,6 @@ SimpleTimer timer(1500);
        B=md, A=Tape1)
  */
 
-// Define Network Credentials
-const char *ssid = "HRouter-1";
-const char *password = "13280073116925758533";
-
 // Define WiFi Client.
 WiFiClient client;
 
@@ -51,8 +48,11 @@ HAMqtt mqtt(client, device, 24);
 // Store Volume Slider.
 HANumber volume("Volume");
 
+// Store Power Trigger.
+HANumber trigger("Trigger");
+
 // Store Bus Version Select.
-HASelect version("type");
+HASelect version("Type");
 
 // Store Input Select.
 HASelect input("Input");
@@ -70,7 +70,10 @@ HASwitch power("Power");
 HAButton reset("Reset");
 
 // Store Current Meter.
-HASensorNumber current("Current");
+HASensorNumber current("Current", HASensorNumber::PrecisionP3);
+
+// Store Load Meter.
+HASensorNumber load("Load", HASensorNumber::PrecisionP3);
 
 /**
  * Bread Board:
@@ -117,6 +120,8 @@ class beginWebserver;
 
 class handleMeasurement;
 
+class handleConfig;
+
 void receiveMessage(uint8_t *data, size_t length);
 
 void try_all(int wait);
@@ -144,19 +149,8 @@ void setup() {
     Serial.begin(115200);
     Serial.setDebugOutput(true);
 
-    prepare();
-
-    // Connect to Wi-Fi Network.
-    WiFi.begin(ssid, password);
-
-    // Wait until Device is Connected.
-    while (WiFi.status() != WL_CONNECTED) {
-        // Print Waiting Point.
-        Serial.print(".");
-
-        // Let Status LED Blink.
-        Device::status_led(150);
-    }
+    // Begin Config Manager.
+    Device::beginConfig();
 
     // Begin OTA Server.
     Device::beginOTA();
@@ -201,6 +195,15 @@ void setup() {
     volume.setMode(HANumber::ModeSlider);
     volume.onCommand(MQTT::onVolume);
 
+    // Prepare Power Trigger.
+    trigger.setMax(920);
+    trigger.setMin(1);
+    trigger.setName("Trigger");
+    trigger.setUnitOfMeasurement("W");
+    trigger.setMode(HANumber::ModeBox);
+    trigger.setCurrentState(Device::getTrigger());
+    trigger.onCommand(MQTT::onTrigger);
+
     // Prepare Mute Switch.
     mute.setName("Mute");
     mute.setIcon("mdi:volume-off");
@@ -222,7 +225,7 @@ void setup() {
     reset.onCommand(MQTT::onReset);
 
     // Prepare BUS Version.
-    version.setName("Typ");
+    version.setName("Type");
     version.setIcon("mdi:knob");
     version.setOptions("XS8;SL16");
     version.onCommand(MQTT::onVersion);
@@ -237,8 +240,13 @@ void setup() {
 
     // Prepare Current Meter.
     current.setName("Current");
-    current.setUnitOfMeasurement("mA");
-    //current.setIcon("mdi:current-ac");
+    current.setUnitOfMeasurement("A");
+    current.setIcon("mdi:current-ac");
+
+    // Prepare Load Meter.
+    load.setName("Load");
+    load.setUnitOfMeasurement("W");
+    load.setIcon("mdi:lightbulb");
 
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
@@ -343,6 +351,9 @@ void loop() {
         mqtt.loop();
     }*/
 
+    // Handle Config.
+    Device::handleConfig();
+
     // Handle WebServer Client/s.
     Device::handleWebserver();
 
@@ -363,7 +374,10 @@ void loop() {
     // Check for Timer State.
     if (timer.isReady()) {
         // Set Current Value.
-        current.setCurrentValue((float) Watcher::getIRMS());
+        current.setValue((float) Watcher::getIRMS());
+
+        // Set Load Value.
+        load.setValue((float) Watcher::getIRMS() * 230);
 
         // Reset Timer to Loop.
         timer.reset();

@@ -67,6 +67,9 @@ void MQTT::onInput(int8_t state, HASelect *sender) {
     // Set Input Channel.
     Kenwood::setInput(state);
 
+    // Change Input Value.
+    Device::setInput(state);
+
     sender->setState(state);
 }
 
@@ -82,6 +85,9 @@ void MQTT::onVersion(int8_t state, HASelect *sender) {
     // Set Interface of Bus.
     Kenwood::set_interface((state == 0 ? -8 : -16));
 
+    // Change Version Value.
+    Device::setType(state);
+
     sender->setState(state);
 }
 
@@ -92,4 +98,17 @@ void MQTT::onVersion(int8_t state, HASelect *sender) {
 void MQTT::onReset(HAButton *button) {
     // Print Debug Information.
     Device::println("Resetting TV Power.");
+}
+
+/**
+ * On Trigger Change.
+ * @param state
+ * @param sender
+ */
+void MQTT::onTrigger(HANumeric state, HANumber *sender) {
+    // Change Trigger Value.
+    Device::setTrigger(state.toUInt16());
+
+    // Set State of Trigger.
+    sender->setState(state);
 }

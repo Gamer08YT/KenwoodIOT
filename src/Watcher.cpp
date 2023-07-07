@@ -10,7 +10,7 @@
 EnergyMonitor monitor;
 
 // Store IRMS.
-double irmsIO = 0;
+float irmsIO = 0;
 
 // Store last Update Time.
 unsigned long updatedIO = 0;
@@ -45,6 +45,6 @@ void Watcher::handleMeasurement() {
  * Return IRMS Current in mA.
  * @return
  */
-double Watcher::getIRMS() {
+float Watcher::getIRMS() {
     return irmsIO;
 }

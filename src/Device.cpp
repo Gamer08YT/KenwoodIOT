@@ -3,6 +3,9 @@
 //
 
 #include <Arduino.h>
+#include <WiFiClient.h>
+#include <cstdio>
+#include <string>
 #include "Device.h"
 #include "commands/Command.h"
 #include "commands/InfoCommand.h"
@@ -14,7 +17,7 @@
 #include "commands/ClearCommand.h"
 #include "ElegantOTA.h"
 #include "Watcher.h"
-
+#include "IotWebConfUsing.h"
 
 // Store Telnet Instance.
 ESPTelnet telnet;
@@ -23,8 +26,38 @@ EscapeCodes ansi;
 // Store WebServer Instance.
 ESP8266WebServer server(80);
 
+// Store DNS Server instance.
+DNSServer dns;
+
+// Define Web Config.
+IotWebConf config("ByteSwitch", &dns, &server, "ByteSwitch");
+
 // Store Commands.
 std::vector<Command *> commands;
+
+// Store Custom Config Group.
+IotWebConfParameterGroup group = IotWebConfParameterGroup("switch", "Smart Switch");
+
+// Store Buffer for Trigger.
+char buffer_trigger[16];
+
+// Store Buffer for Type.
+char buffer_type[8];
+
+// Store Buffer for Input.
+char buffer_input[8];
+
+// Store Custom Trigger Entry.
+IotWebConfNumberParameter config_trigger = IotWebConfNumberParameter("Trigger", "trigger", buffer_trigger, 16, "0",
+                                                                     "1..920", "min='1' max='920' step='1'");
+
+// Store Bus Type Entry.
+IotWebConfNumberParameter config_type = IotWebConfNumberParameter("Type", "type", buffer_type, 8, "1",
+                                                                  "0..1", "min='0' max='1' step='1'");
+
+// Store Input Channel Entry.
+IotWebConfNumberParameter config_input = IotWebConfNumberParameter("Input", "input", buffer_input, 8, "1",
+                                                                   "0..1", "min='0' max='1' step='1'");
 
 /**
  * Let Status LED Blink for Duration.
@@ -263,6 +296,9 @@ void Device::print_device() {
     Device::print("Power: ");
     Device::print(String(Watcher::getIRMS() * 230));
     Device::println("W");
+    Device::print("Trigger: ");
+    Device::print(String(Device::getTrigger()));
+    Device::println("W");
 
     // Print MQTT Info.
     Device::println("\nMQTT:");
@@ -331,6 +367,81 @@ void Device::beginWebserver() {
 void Device::handleWebserver() {
     server.handleClient();
 }
+
+/**
+ * Begin Config Server.
+ */
+void Device::beginConfig() {
+    // Add Custom Values to Group.
+    group.addItem(&config_trigger);
+    group.addItem(&config_type);
+    group.addItem(&config_input);
+
+    // Add Group to Config.
+    config.addParameterGroup(&group);
+
+    // Set AP Timeout.
+    config.setApTimeoutMs(10000);
+
+    // Initialize Config.
+    config.init();
+
+    server.on("/config", []() { config.handleConfig(); });
+    server.onNotFound([]() { config.handleConfig(); });
+}
+
+/**
+ * Handle Loop Function of Config.
+ */
+void Device::handleConfig() {
+    // Do Config Loop Function.
+    config.doLoop();
+}
+
+/**
+ * Get Trigger Config Entry.
+ * @return
+ */
+int Device::getTrigger() {
+    return (int) std::stoi(buffer_trigger);
+}
+
+/**
+ * Set Trigger Value.
+ * @param int8
+ */
+void Device::setTrigger(uint16_t valueIO) {
+    // Copy new Value into Buffer.
+    std::snprintf(buffer_trigger, sizeof(buffer_trigger), "%hu", valueIO);
+
+    // Write Config to EEPROM.
+    config.saveConfig();
+}
+
+/**
+ * Set Bus Type.
+ * @param state
+ */
+void Device::setType(int8_t state) {
+    // Copy new Value into Buffer.
+    std::snprintf(buffer_type, sizeof(buffer_type), "%hu", state);
+
+    // Write Config to EEPROM.
+    config.saveConfig();
+}
+
+/**
+ * Set Input Entry.
+ * @param state
+ */
+void Device::setInput(int8_t state) {
+    // Copy new Value into Buffer.
+    std::snprintf(buffer_input, sizeof(buffer_input), "%hu", state);
+
+    // Write Config to EEPROM.
+    config.saveConfig();
+}
+
 
 
 

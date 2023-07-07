@@ -3,7 +3,13 @@
 //
 
 #include "HomeAssistant.h"
+#include "Device.h"
+#include "HAMqtt.h"
 
-void prepare() {
+
+/**
+ * Prepare MQTT Connection.
+ */
+void HomeAssistant::prepare() {
 
 }
