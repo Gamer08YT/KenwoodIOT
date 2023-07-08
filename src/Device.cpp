@@ -386,8 +386,28 @@ void Device::beginConfig() {
     // Initialize Config.
     config.init();
 
+    // Set Connection Callback.
+    config.setWifiConnectionCallback(Device::onWiFiConnected);
+
     server.on("/config", []() { config.handleConfig(); });
     server.onNotFound([]() { config.handleConfig(); });
+}
+
+/**
+ * Execute when WiFi Connection was established.
+ */
+void Device::onWiFiConnected() {
+    // Begin OTA Server.
+    Device::beginOTA();
+
+    // Start WebServer
+    Device::beginWebserver();
+
+    // Register all Commands.
+    Device::addCommands();
+
+    // Start Telnet Stream.
+    Device::beginTelnet();
 }
 
 /**
@@ -441,6 +461,16 @@ void Device::setInput(int8_t state) {
     // Write Config to EEPROM.
     config.saveConfig();
 }
+
+const int8_t Device::getInput() {
+    return (int) std::stoi(buffer_input);
+}
+
+const int8_t Device::getType() {
+    return (int) std::stoi(buffer_type);
+}
+
+
 
 
 

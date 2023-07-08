@@ -16,6 +16,12 @@ public:
     static void handleMeasurement();
 
     static float getIRMS();
+
+    static void setRelais(int pinIO, bool stateIO);
+
+    static void handleRelais();
+
+    static const bool getState();
 };
 
 

@@ -5,6 +5,7 @@
 #include "MQTT.h"
 #include "Kenwood.h"
 #include "Device.h"
+#include "Watcher.h"
 
 /**
  * On Standby Event.
@@ -54,6 +55,9 @@ void MQTT::onPower(bool state, HASwitch *sender) {
     Device::print("Set Power to ");
     Device::println(String(state));
 
+    // Set Power State of Relais.
+    Watcher::setRelais(D5, state);
+
     sender->setState(state);
 }
 
@@ -98,6 +102,21 @@ void MQTT::onVersion(int8_t state, HASelect *sender) {
 void MQTT::onReset(HAButton *button) {
     // Print Debug Information.
     Device::println("Resetting TV Power.");
+
+    // Retain Button.
+    button->setRetain(true);
+
+    // Power off TV.
+    Watcher::setRelais(D6, true);
+
+    // Wait 1 Second before Power on.
+    delay(2000);
+
+    // Power on TV.
+    Watcher::setRelais(D6, false);
+
+    // Retain Button.
+    button->setRetain(false);
 }
 
 /**

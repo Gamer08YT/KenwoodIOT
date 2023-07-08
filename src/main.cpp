@@ -152,18 +152,6 @@ void setup() {
     // Begin Config Manager.
     Device::beginConfig();
 
-    // Begin OTA Server.
-    Device::beginOTA();
-
-    // Start WebServer
-    Device::beginWebserver();
-
-    // Register all Commands.
-    Device::addCommands();
-
-    // Start Telnet Stream.
-    Device::beginTelnet();
-
     // Prepare OTA for Remote Programming.
     //ArduinoOTA.setHostname("energyswitch");
     //ArduinoOTA.setPassword("ByteSwitch");
@@ -229,13 +217,16 @@ void setup() {
     version.setIcon("mdi:knob");
     version.setOptions("XS8;SL16");
     version.onCommand(MQTT::onVersion);
-    version.setCurrentState((Kenwood::getInterface() == 8 ? 0 : 1));
+    version.setCurrentState(Device::getType());
+
+    // Set Kenwood Interface.
+    Kenwood::set_interface((Device::getType() == 0 ? -8 : -16));
 
     // Prepare Input Select.
     input.setName("Input");
     input.setIcon("mdi:cable");
     input.setOptions("TV;Phono");
-    input.setCurrentState(0);
+    input.setCurrentState(Device::getInput());
     input.onCommand(MQTT::onInput);
 
     // Prepare Current Meter.
@@ -378,6 +369,9 @@ void loop() {
 
         // Set Load Value.
         load.setValue((float) Watcher::getIRMS() * 230);
+
+        // Set Power Status.
+        power.setState(Watcher::getState());
 
         // Reset Timer to Loop.
         timer.reset();

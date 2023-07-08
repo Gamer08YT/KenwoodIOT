@@ -72,6 +72,12 @@ public:
     static void setType(int8_t state);
 
     static void setInput(int8_t state);
+
+    static const int8_t getInput();
+
+    static const int8_t getType();
+
+    static void onWiFiConnected();
 };
 
 
