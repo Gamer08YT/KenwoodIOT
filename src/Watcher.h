@@ -21,7 +21,9 @@ public:
 
     static void handleRelais();
 
-    static const bool getState();
+    static bool getState();
+
+    static void handleRelaisInput(bool stateIO);
 };
 
 

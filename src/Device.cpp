@@ -3,7 +3,6 @@
 //
 
 #include <Arduino.h>
-#include <WiFiClient.h>
 #include <cstdio>
 #include <string>
 #include "Device.h"

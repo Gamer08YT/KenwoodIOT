@@ -22,6 +22,9 @@ int counterIO = 0;
 // Store Relais State.
 bool stateIO = false;
 
+// Store Manuel Mode.
+bool manuelIO = false;
+
 /**
  * Prepare PINS for Current Sensor.
  */
@@ -39,7 +42,6 @@ void Watcher::prepare() {
 
     // Setup Monitor.
     monitor.current(A0, 444.4);
-
 }
 
 /**
@@ -90,7 +92,7 @@ void Watcher::setRelais(int pinIO, bool stateIO) {
 void Watcher::handleRelais() {
     // Handle Trigger with measured Load.
     if (static_cast<float>(Device::getTrigger()) < (irmsIO * 230)) {
-        if (!stateIO) {
+        if (!stateIO && !manuelIO) {
             // Wait 1 Second to prevent Power/Current Spike.
             Device::status_led(1000);
 
@@ -104,7 +106,7 @@ void Watcher::handleRelais() {
             stateIO = true;
         }
     } else {
-        if (stateIO) {
+        if (stateIO && !manuelIO) {
             // Check if Counter is smaller than 5 Seconds to give a small debounce time..
             if (counterIO < 5) {
                 // Set LED Status.
@@ -129,6 +131,28 @@ void Watcher::handleRelais() {
     }
 }
 
-const bool Watcher::getState() {
+bool Watcher::getState() {
     return stateIO;
+}
+
+/**
+ * Handle Relais Manual Mode.
+ * @param stateIO
+ */
+void Watcher::handleRelaisInput(bool valueIO) {
+    if (!stateIO && valueIO) {
+        // Enable Manuel Mode.
+        manuelIO = true;
+
+        // Set Power State of Relais.
+        Watcher::setRelais(D5, true);
+
+        // Set Relais State.
+        stateIO = true;
+    } else if (stateIO && !valueIO) {
+        // Disable Manual Mode.
+        manuelIO = false;
+
+        // Relais getting Switched via Watcher Automatism.
+    }
 }

@@ -55,8 +55,8 @@ void MQTT::onPower(bool state, HASwitch *sender) {
     Device::print("Set Power to ");
     Device::println(String(state));
 
-    // Set Power State of Relais.
-    Watcher::setRelais(D5, state);
+    // Handle Relais Input (Manuel Mode)
+    Watcher::handleRelaisInput(state);
 
     sender->setState(state);
 }
