@@ -24,6 +24,8 @@ public:
     static bool getState();
 
     static void handleRelaisInput(bool stateIO);
+
+    static bool getManuel();
 };
 
 

@@ -46,34 +46,37 @@ HADevice device;
 HAMqtt mqtt(client, device, 24);
 
 // Store Volume Slider.
-HANumber volume("Volume");
+HANumber volume("switch_volume");
 
 // Store Power Trigger.
-HANumber trigger("Trigger");
+HANumber trigger("switch_trigger");
 
 // Store Bus Version Select.
-HASelect version("Type");
+HASelect version("switch_type");
 
 // Store Input Select.
-HASelect input("Input");
+HASelect input("switch_input");
 
 // Store Mute Switch.
-HASwitch mute("Mute");
+HASwitch mute("switch_mute");
 
 // Store Standby Switch.
-HASwitch standby("Standby");
+HASwitch standby("switch_standby");
 
 // Store Power Switch.
-HASwitch power("Power");
+HASwitch power("switch_power");
 
 // Store Reset Button.
-HAButton reset("Reset");
+HAButton reset("switch_reset");
 
 // Store Current Meter.
-HASensorNumber current("Current", HASensorNumber::PrecisionP3);
+HASensorNumber current("switch_current", HASensorNumber::PrecisionP3);
 
 // Store Load Meter.
-HASensorNumber load("Load", HASensorNumber::PrecisionP3);
+HASensorNumber load("switch_load", HASensorNumber::PrecisionP3);
+
+// Store Manuel Mode.
+HABinarySensor manuel("switch_manuel");
 
 /**
  * Bread Board:
@@ -239,6 +242,11 @@ void setup() {
     load.setUnitOfMeasurement("W");
     load.setIcon("mdi:lightbulb");
 
+    // Prepare Manuel Mode.
+    manuel.setName("Hand");
+    manuel.setIcon("mdi:hand-back-left");
+    manuel.setState(false);
+
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
     mqtt.onConnected(onConnected);
@@ -372,6 +380,9 @@ void loop() {
 
         // Set Power Status.
         power.setState(Watcher::getState());
+
+        // Set Hand Mode Status (Manuel State).
+        manuel.setState(Watcher::getManuel());
 
         // Reset Timer to Loop.
         timer.reset();

@@ -147,12 +147,22 @@ void Watcher::handleRelaisInput(bool valueIO) {
         // Set Power State of Relais.
         Watcher::setRelais(D5, true);
 
+        // Print Debug Message.
+        Device::println("Entered Manuel Mode.");
+
         // Set Relais State.
         stateIO = true;
     } else if (stateIO && !valueIO) {
         // Disable Manual Mode.
         manuelIO = false;
 
+        // Print Debug Message.
+        Device::println("Quitting Manuel Mode.");
+
         // Relais getting Switched via Watcher Automatism.
     }
+}
+
+bool Watcher::getManuel() {
+    return manuelIO;
 }
