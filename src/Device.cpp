@@ -266,12 +266,6 @@ void Device::handleCommand(String dataIO) {
 }
 
 void Device::print_device() {
-    // Set Busy Pin to Input.
-    pinMode(Kenwood::getBusy(), INPUT);
-
-    // Set Data Pin to Input.
-    pinMode(Kenwood::getData(), INPUT);
-
     // Print Pin Info.
     Device::println("Pins:");
     Device::print("Busy: ");

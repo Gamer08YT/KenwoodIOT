@@ -1,8 +1,25 @@
 # KenwoodIOT
 
-A simple project that works with the XS8/SL16 bus to address Kenwood products.
+A simple project that works with the **XS8/SL16** bus to address Kenwood products.
 
 In addition, a transducer is built in to switch on the amplifier when a load is switched on at the socket.
+
+<img alt="img.png" src="img.png" height="350px"/>
+
+---
+
+### Telnet:
+
+The Device features a Telnet Server for Debugging Serial Prints over WiFi/Ethernet.
+
+#### Telnet Commands:
+
+- /help
+- /reset
+- /clear
+- /bye
+- /info
+- /send
 
 ---
 

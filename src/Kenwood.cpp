@@ -4,13 +4,16 @@
 
 
 #include <HardwareSerial.h>
-#include <pins_arduino.h>
 #include <Arduino.h>
 #include "Kenwood.h"
 #include "Device.h"
 
-const uint8_t PIN_DATA = D2;
-const uint8_t PIN_BUSY = D1;
+//Data Pin: (D2 => 04)
+const uint8_t PIN_DATA = 04;
+
+// Busy Pin: (D1 => 05)
+const uint8_t PIN_BUSY = 05;
+
 const uint8_t RESPONSE = 4;//for loop stopping at event like motor start
 
 uint16_t last_cmd = 1;
@@ -214,12 +217,13 @@ void Kenwood::send_cmd(uint16_t cmd) {
  */
 void Kenwood::prepare() {
     //pinMode(RESPONSE, INPUT);
-    pinMode(PIN_BUSY, INPUT);
-    pinMode(PIN_DATA, INPUT);
+    pinMode(PIN_BUSY, INPUT_PULLUP);
+    pinMode(PIN_DATA, INPUT_PULLUP);
+
     Serial.begin(115200);
 
     // Set Default Interface Version.
-    set_interface(-16);
+    //set_interface(-16);
 }
 
 int Kenwood::getInterface() {

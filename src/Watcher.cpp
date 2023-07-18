@@ -6,6 +6,7 @@
 #include "Watcher.h"
 #include "EmonLib.h"
 #include "Device.h"
+#include "Kenwood.h"
 
 // Store Energy Monitor Instance.
 EnergyMonitor monitor;

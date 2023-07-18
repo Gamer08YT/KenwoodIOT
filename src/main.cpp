@@ -6,9 +6,7 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoHA.h>
 #include <WiFiClient.h>
-#include <HomeAssistant.h>
 #include <MQTT.h>
-#include <IotWebConf.h>
 
 // Device Classes
 #include "Kenwood.h"
@@ -78,13 +76,19 @@ HASensorNumber load("switch_load", HASensorNumber::PrecisionP3);
 // Store Manuel Mode.
 HABinarySensor manuel("switch_manuel");
 
+// Store Busy Bit.
+HABinarySensor busy("switch_busy");
+
+// Store Data Bit.
+HABinarySensor data("switch_data");
+
 /**
  * Bread Board:
- * -----------------
- * |       |       |
- * | DATA  | BUSY  |
- * |       |       |
- * -----------------
+ * ------------------------------
+ * |              |             |
+ * | DATA (RING)  | BUSY (TIP)  |
+ * |              |             |
+ * ------------------------------
  */
 
 /*
@@ -222,9 +226,6 @@ void setup() {
     version.onCommand(MQTT::onVersion);
     version.setCurrentState(Device::getType());
 
-    // Set Kenwood Interface.
-    Kenwood::set_interface((Device::getType() == 0 ? -8 : -16));
-
     // Prepare Input Select.
     input.setName("Input");
     input.setIcon("mdi:cable");
@@ -247,6 +248,14 @@ void setup() {
     manuel.setIcon("mdi:hand-back-left");
     manuel.setState(false);
 
+    // Prepare Busy Bit.
+    busy.setName("Busy State");
+    busy.setIcon("mdi:sleep");
+
+    // Prepare Data Bit.
+    data.setName("Data State");
+    data.setIcon("mdi:electric-switch");
+
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
     mqtt.onConnected(onConnected);
@@ -260,6 +269,9 @@ void setup() {
     // Set Input and Output Pins.
     Kenwood::prepare();
     Watcher::prepare();
+
+    // Set Kenwood Interface.
+    //Kenwood::set_interface((Device::getType() == 0 ? -8 : -16));
 
     // Print Info Commands.
     print_info();
@@ -387,4 +399,8 @@ void loop() {
         // Reset Timer to Loop.
         timer.reset();
     }
+
+    // Read Data and Busy Binary Values.
+    busy.setState(digitalRead(Kenwood::getBusy()), false);
+    data.setState(digitalRead(Kenwood::getData()), false);
 }
