@@ -4,7 +4,7 @@ A simple project that works with the **XS8/SL16** bus to address Kenwood product
 
 In addition, a transducer is built in to switch on the amplifier when a load is switched on at the socket.
 
-<img alt="img.png" src="img.png" height="350px"/>
+<img alt="img.png" src="assets/img/bus_screenshot.png" height="350px"/>
 
 ---
 
@@ -18,6 +18,9 @@ graph LR
     ESP8266 <--> MQTT(MQTT / HomeAssistant)
     ESP8266 <--- Current(Current Transformer)
 ```
+
+### Device Schematic:
+![img_1.png](assets/img/schaltplan.png)
 
 ### Telnet:
 
