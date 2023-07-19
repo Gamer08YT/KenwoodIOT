@@ -8,6 +8,17 @@ In addition, a transducer is built in to switch on the amplifier when a load is 
 
 ---
 
+### Device Topology:
+
+```mermaid
+graph LR
+    Kenwood(Kenwood XS8 / SL16) <--> ESP8266
+    Telnet <--> ESP8266
+    ESP8266 --> Relais(Relais)
+    ESP8266 <--> MQTT(MQTT / HomeAssistant)
+    ESP8266 <--- Current(Current Transformer)
+```
+
 ### Telnet:
 
 The Device features a Telnet Server for Debugging Serial Prints over WiFi/Ethernet.
