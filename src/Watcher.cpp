@@ -34,12 +34,12 @@ void Watcher::prepare() {
     pinMode(A0, INPUT);
 
     // Set PINs for Relais.
-    pinMode(D5, OUTPUT);
-    pinMode(D6, OUTPUT);
+    pinMode(05, OUTPUT);
+    pinMode(04, OUTPUT);
 
     // Set PINS for Relais LOW.
-    setRelais(D5, false);
-    setRelais(D6, false);
+    setRelais(05, false);
+    setRelais(04, false);
 
     // Setup Monitor.
     monitor.current(A0, 444.4);
@@ -98,7 +98,7 @@ void Watcher::handleRelais() {
             Device::status_led(1000);
 
             // Enable Relais for Socket.
-            Watcher::setRelais(D5, true);
+            Watcher::setRelais(05, true);
 
             // Reset Counter.
             counterIO = 0;
@@ -120,7 +120,7 @@ void Watcher::handleRelais() {
                 Device::status_led(500);
 
                 // Disable Relais for Socket after a while.
-                Watcher::setRelais(D5, false);
+                Watcher::setRelais(05, false);
 
                 // Reset Counter.
                 counterIO = 0;
@@ -146,7 +146,7 @@ void Watcher::handleRelaisInput(bool valueIO) {
         manuelIO = true;
 
         // Set Power State of Relais.
-        Watcher::setRelais(D5, true);
+        Watcher::setRelais(05, true);
 
         // Print Debug Message.
         Device::println("Entered Manuel Mode.");

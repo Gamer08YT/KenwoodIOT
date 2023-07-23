@@ -59,7 +59,7 @@ void MQTT::onPower(bool state, HASwitch *sender) {
     Watcher::handleRelaisInput(state);
 
     // Set Power State of Relais.
-    // Watcher::setRelais(D5, state);
+    // Watcher::setRelais(D1, state);
 
     sender->setState(state);
 }
@@ -110,13 +110,13 @@ void MQTT::onReset(HAButton *button) {
     button->setRetain(true);
 
     // Power off TV.
-    Watcher::setRelais(D6, true);
+    Watcher::setRelais(04, true);
 
     // Wait 1 Second before Power on.
     delay(2000);
 
     // Power on TV.
-    Watcher::setRelais(D6, false);
+    Watcher::setRelais(04, false);
 
     // Retain Button.
     button->setRetain(false);

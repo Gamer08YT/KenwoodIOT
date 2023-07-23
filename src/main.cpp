@@ -13,6 +13,7 @@
 #include "Device.h"
 #include "Watcher.h"
 #include "SimpleTimer.h"
+#include "Remote.h"
 
 // Timer for HA Updates.
 SimpleTimer timer(2500);
@@ -71,16 +72,16 @@ HAButton reset("switch_reset");
 HASensorNumber current("switch_current", HASensorNumber::PrecisionP3);
 
 // Store Load Meter.
-HASensorNumber load("switch_load", HASensorNumber::PrecisionP3);
+HASensorNumber load("switch_load", HASensorNumber::PrecisionP2);
 
 // Store Manuel Mode.
 HABinarySensor manuel("switch_manuel");
 
 // Store Busy Bit.
-HABinarySensor busy("switch_busy");
+HASensorNumber busy("switch_busy", HASensorNumber::PrecisionP0);
 
 // Store Data Bit.
-HABinarySensor data("switch_data");
+HASensorNumber data("switch_data", HASensorNumber::PrecisionP0);
 
 /**
  * Bread Board:
@@ -195,6 +196,7 @@ void setup() {
     trigger.setMin(1);
     trigger.setName("Trigger");
     trigger.setUnitOfMeasurement("W");
+    trigger.setDeviceClass("power");
     trigger.setMode(HANumber::ModeBox);
     trigger.setCurrentState(Device::getTrigger());
     trigger.onCommand(MQTT::onTrigger);
@@ -202,21 +204,25 @@ void setup() {
     // Prepare Mute Switch.
     mute.setName("Mute");
     mute.setIcon("mdi:volume-off");
+    mute.setDeviceClass("switch");
     mute.onCommand(MQTT::onMute);
 
     // Prepare Standby Switch.
     standby.setName("Standby");
     standby.setIcon("mdi:power-sleep");
+    power.setDeviceClass("switch");
     standby.onCommand(MQTT::onStandby);
 
     // Prepare Power Switch.
     power.setName("Power");
     power.setIcon("mdi:power");
+    power.setDeviceClass("outlet");
     power.onCommand(MQTT::onPower);
 
     // Prepare Reset Button.
     // reset.setIcon("mdi:restart");
     reset.setName("Reset");
+    reset.setDeviceClass("restart");
     reset.onCommand(MQTT::onReset);
 
     // Prepare BUS Version.
@@ -236,11 +242,13 @@ void setup() {
     // Prepare Current Meter.
     current.setName("Current");
     current.setUnitOfMeasurement("A");
+    current.setDeviceClass("current");
     current.setIcon("mdi:current-ac");
 
     // Prepare Load Meter.
     load.setName("Load");
     load.setUnitOfMeasurement("W");
+    load.setDeviceClass("power");
     load.setIcon("mdi:lightbulb");
 
     // Prepare Manuel Mode.
@@ -251,10 +259,12 @@ void setup() {
     // Prepare Busy Bit.
     busy.setName("Busy State");
     busy.setIcon("mdi:sleep");
+    busy.setUnitOfMeasurement("Binary");
 
     // Prepare Data Bit.
     data.setName("Data State");
     data.setIcon("mdi:electric-switch");
+    data.setUnitOfMeasurement("Binary");
 
     // Add MQTT Listener.
     mqtt.onMessage(onMessage);
@@ -269,6 +279,7 @@ void setup() {
     // Set Input and Output Pins.
     Kenwood::prepare();
     Watcher::prepare();
+    Remote::prepare();
 
     // Set Kenwood Interface.
     //Kenwood::set_interface((Device::getType() == 0 ? -8 : -16));
@@ -401,6 +412,9 @@ void loop() {
     }
 
     // Read Data and Busy Binary Values.
-    busy.setState(digitalRead(Kenwood::getBusy()), false);
-    data.setState(digitalRead(Kenwood::getData()), false);
+    busy.setValue(digitalRead(Kenwood::getBusy()), false);
+    data.setValue(digitalRead(Kenwood::getData()), false);
+
+    // Handle IR Commands.
+    Remote::handleIR();
 }

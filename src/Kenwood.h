@@ -15,8 +15,6 @@ public:
 
     static void standby(bool state);
 
-    static void send_cmd(uint16_t cmd);
-
     static void set_interface(int i);
 
     static void try_all(int wait);
@@ -30,6 +28,10 @@ public:
     static uint8_t getData();
 
     static uint8_t getBusy();
+
+    static void sendWord(unsigned long word);
+
+    static void send_cmd(unsigned long cmd);
 };
 
 

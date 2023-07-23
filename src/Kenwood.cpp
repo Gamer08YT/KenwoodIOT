@@ -7,12 +7,24 @@
 #include <Arduino.h>
 #include "Kenwood.h"
 #include "Device.h"
+#include "Remote.h"
+
+const unsigned long MSB = 1l << 15; // 16 bits
+
+enum {
+    SDAT = 2,
+    CTRL = 3,
+    BIT_ONE_DELAY_MICROSEC = 3200,
+    BIT_TERMINATOR_DELAY_MICROSEC = 2250,
+    BIT_GAP_DELAY_MICROSEC = 2250,
+    ENABLE_OPEN_COLLECTOR = 1,
+};
 
 //Data Pin: (D2 => 04)
-const uint8_t PIN_DATA = 04;
+const uint8_t PIN_DATA = D5;
 
 // Busy Pin: (D1 => 05)
-const uint8_t PIN_BUSY = 05;
+const uint8_t PIN_BUSY = D6;
 
 const uint8_t RESPONSE = 4;//for loop stopping at event like motor start
 
@@ -50,6 +62,9 @@ void Kenwood::standby(bool state) {
         Kenwood::send_cmd(0x1000);
     else
         Kenwood::send_cmd(0x1080);
+
+    // Or send via IR.
+    Remote::send_cmd(0x9D);
 }
 
 /**
@@ -135,73 +150,40 @@ void Kenwood::try_all(int wait) {
  * Send CMD to Receiver.
  * @param cmd
  */
-void Kenwood::send_cmd(uint16_t cmd) {
-    Device::print("Interface ");
-    Device::print(String(interface, DEC));
-    Device::print(" Command ");
-    Device::print(String(cmd, BIN));
-    Device::print(" / 0x");
-    Device::println(String(cmd, HEX));
 
+void Kenwood::send_cmd(unsigned long cmd) {
     // Check if Device is Busy.
     if (!digitalRead(PIN_BUSY)) {
-        pinMode(PIN_BUSY, OUTPUT);
-        pinMode(PIN_DATA, OUTPUT);
-        Serial.begin(115200);
-        digitalWrite(PIN_BUSY, LOW);
-        digitalWrite(PIN_DATA, LOW);
+        Device::print("Interface ");
+        Device::print(String(interface, DEC));
+        Device::print(" Command ");
+        Device::print(String(cmd, BIN));
+        Device::print(" / 0x");
+        Device::println(String(cmd, HEX));
 
-        // Set Busy Lock.
-        digitalWrite(PIN_BUSY, HIGH);
+        pinMode(getBusy(), OUTPUT);
+        pinMode(getData(), OUTPUT);
+        Serial.print("Command ");
+        Serial.print(cmd, DEC);
+        Serial.print(" / 0x");
+        Serial.println(cmd, HEX);
 
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, HIGH);
-
-        // Send Start Bit with Delay.
-        delay(START_BIT_L);
-        digitalWrite(PIN_DATA, HIGH);
-
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, LOW);
-
-        // Delay next Bit.
-        delay(START_BIT_H);
-
-        //PIN_DATA bits
-        for (uint16_t mask = 1U << (interface - 1); mask; mask >>= 1) {
-            digitalWrite(PIN_DATA, LOW);
-
-            // Set LED Status for Write Mode.
-            digitalWrite(LED_BUILTIN, HIGH);
-
-            if (cmd & mask)
-                delay(BIT_1L);
-            else
-                delay(BIT_0L);
-            digitalWrite(PIN_DATA, HIGH);
-
-            // Set LED Status for Write Mode.
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(BIT_H);
+        digitalWrite(getData(), LOW);
+        if (ENABLE_OPEN_COLLECTOR) {
+            pinMode(getData(), INPUT);
         }
+        digitalWrite(getBusy(), HIGH);
+        delayMicroseconds(5000);
 
-        //end command
-        digitalWrite(PIN_DATA, LOW);
-        //PIN_BUSY off
-        digitalWrite(PIN_BUSY, LOW);
-        delay(1);
+        Kenwood::sendWord(cmd);
 
-        //go standby
-        pinMode(PIN_BUSY, INPUT);
-        pinMode(PIN_DATA, INPUT);
-        Serial.begin(115200);
-        last_cmd = cmd;
+        // Return to default state
+        digitalWrite(getData(), LOW);
+        delayMicroseconds(2000);
+        digitalWrite(getBusy(), LOW);
 
-        // Set LED Status for Write Mode.
-        digitalWrite(LED_BUILTIN, HIGH);
-
-        // Print Debug Message.
-        Device::println("Sent Command to Kenwood");
+        // Reset PIN Mode.
+        Kenwood::prepare();
     } else {
         // Let LED Blink 2 Times.
         Device::status_led(150);
@@ -209,6 +191,40 @@ void Kenwood::send_cmd(uint16_t cmd) {
 
         // Print Busy Message.
         Device::println("Device is Busy.");
+    }
+
+}
+
+void Kenwood::sendWord(unsigned long word) {
+    // StartBit
+    if (ENABLE_OPEN_COLLECTOR) {
+        pinMode(SDAT, OUTPUT);
+    }
+
+    digitalWrite(getData(), HIGH);
+    delayMicroseconds(5000);
+
+    for (unsigned long mask = MSB; mask; mask >>= 1) {
+        digitalWrite(getData(), LOW);
+
+        if (ENABLE_OPEN_COLLECTOR) {
+            pinMode(SDAT, INPUT);
+        }
+
+        delayMicroseconds(BIT_GAP_DELAY_MICROSEC);
+        // Bit
+        if (word & mask) {
+            // This is a 1 bit.
+//	    digitalWrite(SDAT, LOW);
+            delayMicroseconds(BIT_ONE_DELAY_MICROSEC);
+        }
+
+        if (ENABLE_OPEN_COLLECTOR) {
+            pinMode(SDAT, OUTPUT);
+        }
+
+        digitalWrite(getData(), HIGH);
+        delayMicroseconds(BIT_TERMINATOR_DELAY_MICROSEC);
     }
 }
 
